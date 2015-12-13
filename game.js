@@ -172,14 +172,15 @@ $(function () {
   var wrapPostMove = function () {
     var buffer = this.scale * this.diameter;
     if (this.x - buffer > canvasWidth) {
-      this.x = -buffer;
+      this.vel.x = -this.vel.x;
+      
     } else if (this.x + buffer < 0) {
-      this.x = canvasWidth + buffer;
+      this.vel.x = -this.vel.x;
     }
     if (this.y - buffer > canvasHeight) {
-      this.y = -buffer;
+      this.vel.y = -this.vel.y;
     } else if (this.y + buffer < 0) {
-      this.y = canvasHeight + buffer;
+      this.vel.y = -this.vel.y;
     }
   }
 
@@ -208,14 +209,14 @@ $(function () {
   bullet.configureMatrix = function () {};
   bullet.draw = function () {
     if (this.visible) {
-      canvas.fillEllipse(this.x-1, this.y-1, 2, 2);
+      canvas.fillEllipse(this.x-1, this.y-1, 5, 5);
     }
   };
   bullet.preMove = function () {
     if (this.visible) {
       this.time++;
     }
-    if (this.time > 50) {
+    if (this.time > 500) {
       this.visible = false;
       this.time = 0;
     }
@@ -246,9 +247,28 @@ $(function () {
   asteroid.scale = 4;
   asteroid.postMove = wrapPostMove;
   asteroid.collision = function (other) {
+
+
     if (other.name == "bullet") {
+       for (var i = 0; i < 5; i++) {
+    var roid = $.extend(true, {}, asteroid);
+    roid.postMove = wrapPostMove;
+    roid.x = this.x;
+    roid.y = this.y;
+    roid.scale = this.scale/2;
+    if (roid.scale < 1) {
+        roid.visible = false;
+      }
+    roid.vel.x = Math.random() * 4 - 2;
+    roid.vel.y = Math.random() * 4 - 2;
+    if (Math.random() > 0.5) {
+      roid.points.reverse();
+    }
+    roid.vel.rot = Math.random() * 2 - 1;
+    sprites.push(roid);
+  }
       this.scale /= 2;
-      if (this.scale < 0.5) {
+      if (this.scale < 1) {
         this.visible = false;
       }
     }
@@ -266,6 +286,7 @@ $(function () {
 
   for (var i = 0; i < 5; i++) {
     var roid = $.extend(true, {}, asteroid);
+    roid.postMove = wrapPostMove;
     roid.x = Math.random() * canvasWidth;
     roid.y = Math.random() * canvasHeight;
     roid.vel.x = Math.random() * 4 - 2;
@@ -305,7 +326,7 @@ $(function () {
     if (KEY_STATUS.space) {
       if (this.delayBeforeBullet == 0) {
         this.delayBeforeBullet = 5;
-        for (var i = 0; i < ship.bullets.length; i++) {
+        for (var i = 0; i <Math.min(15, ship.bullets.length); i++) {
           if (!ship.bullets[i].visible) {
             var bullet = ship.bullets[i];
             var rad = ((this.rot-90) * Math.PI)/180;
